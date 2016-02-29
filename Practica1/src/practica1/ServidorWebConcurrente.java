@@ -2,22 +2,22 @@
  * Autor: Alejandro Marquez Ferrer (566400)
  * 
  * Descripcion: Este fichero contiene el codigo correspondiente a un servidor
- * 		Web iterativo. El servidor se encarga de escuchar a los clientes que
- * 		se conecten a su IP y puerto, y atiende peticiones GET. Envia el fichero
+ * 		Web concurrente. El servidor se encarga de escuchar a los clientes que
+ * 		se conecten a su IP y puerto, y lanza un thread para atender su peticion, 
+ * 		soportando hasta un maximo de 15 hilos simultaneos. En caso de superar
+ * 		dicha cantidad de hilos, no se atendera la respuesta del cliente. Los
+ * 		threads creados atienden peticiones GET. Envian el fichero
  * 		pedido por el cliente con la cabecera HTML correspondiente. Estan 
  * 		implementados los tipos .html y .gif (en caso contrario, lo marca como
  * 		desconocido). Tambien es capaz de gestionar algunos errores:
- * 			-Si el cliente pide un fichero no existente, el servidor le envia un
+ * 			-Si el cliente pide un fichero no existente, el thread le envia un
  * 		error 404.
  * 			-Si el cliente pide un fichero en un directorio padre al del servidor,
  * 		le envia un error 400.
- * 			-Si el cliente envia una peticion distinta de GET, el servidor le envia
+ * 			-Si el cliente envia una peticion distinta de GET, el thread le envia
  * 		un error 501.
- * 
- * Codigo adaptado del proporcionado en el enunciado
  * 	
  */
-
 package practica1;
 
 import java.io.File;
@@ -32,42 +32,47 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
 
-public class ServidorWebIterativo {
-
-	/* Constantes empleadas */
-	private static final int PUERTO = 9001;
+public class ServidorWebConcurrente {
 	
-	private static final String VERSION = "HTTP/1.0";
-	private static final String OK = VERSION + " 200 OK\n";
-	private static final String BAD_REQUEST = "400 Bad Request";
-	private static final String NOT_FOUND = "404 Not Found";
-	private static final String NOT_IMPLEMENTED = "501 Not Implemented";
+	/* Constantes empleadas */
+	protected static final int PUERTO = 9001;
+	
+	protected static final String VERSION = "HTTP/1.0";
+	protected static final String OK = VERSION + " 200 OK\n";
+	protected static final String BAD_REQUEST = "400 Bad Request";
+	protected static final String NOT_FOUND = "404 Not Found";
+	protected static final String NOT_IMPLEMENTED = "501 Not Implemented";
 	
 	/* Ruta del servidor */
-	private static final String DIR = Paths.get(".").toAbsolutePath().normalize().toString();
+	protected static final String DIR = Paths.get(".").toAbsolutePath().normalize().toString();
 	
-	/**
-	 * Inicia el servidor iterativo para atender las peticiones get
-	 * de maximo un cliente a la vez.
-	 */
+	/* Numero maximo de hilos */
+	private static final int MAX_CLIENTES = 15;
+	
 	public static void main(String args[]) throws UnknownHostException, IOException{
 		
-		boolean continuar = true;
-		byte[] buffer = new byte[1024];
 		ServerSocket servidor = new ServerSocket(PUERTO);
-
+		boolean continuar = true;
+		
 		while(continuar){
-			
-			/* Espero a que venga un cliente */
 			Socket cliente = servidor.accept();
 			
-			System.out.println("Cliente conectado");
+			if(Thread.activeCount() < MAX_CLIENTES){
+				
+				/* No se han creado tantos hilos como marca el maximo -> 
+				 * atendemos la peticion */
 			
-			procesarPeticion(cliente, buffer);
+				/* Creacion del hilo para atender la peticion del cliente */
+				PeticionHTTP p = new PeticionHTTP(cliente);
+				Thread t = new Thread(p);
+				t.start();
 			
-			cliente.close();
-			
-			System.out.println("Cliente desconectado");
+			} else{
+				
+				/* Hay mas hilos de los permitidos en uso -> 
+				 * no atendemos la peticion */
+				cliente.close();
+			}
 		}
 		
 		servidor.close();
@@ -166,8 +171,6 @@ public class ServidorWebIterativo {
 	 * Devuelve la cabecera correspondiente al fichero f en caso de que la peticion
 	 * haya sido correcta. Concretamente, especifica la version de HTTP y la cabecera 
 	 * con los datos acerca del tipo de contenido y longitud del contenido.
-	 * @param f
-	 * @return
 	 */
 	private static String escribirCabecera(File f){
 		String contentype = "Content-Type: " + escribirContentType(obtenerExtension(f)) + "\n";
