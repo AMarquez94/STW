@@ -1,0 +1,28 @@
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html"; charset="UTF-8"  />
+	</head>
+	<body>
+		<h1 title="Crear tarea">Crear tarea</h1>
+		<form action="/upload" enctype="multipart/form-data" method="post">
+		<div>
+			<p>Introduzca la descripción de la tarea a realizar:</p>
+			<textarea name="Descripcion" rows="4" cols="50" required></textarea>
+		</div>
+		<div>
+			<p>Introduzca la fecha límite para la entrega:</p>
+			<input type="date" name="Fecha" required/>
+		</div>
+		<div>
+			<p>Introduzca un fichero (opcional):</p>
+			<input type="file" name="Fichero" multiple="multiple"></input>
+		</div>
+		<div>
+			<br/>
+			<input type="reset" value="Reiniciar"></input>
+			<input type="submit" value="Subir"></input>
+		</div>
+		</form>
+	</body>
+
+</html>
