@@ -1,16 +1,12 @@
 var querystring = require("querystring"),
     fs = require("fs"),
-    formidable = require("formidable");
+    formidable = require("formidable"),
+    db = require("./db"),
+    view = require("./view");
 
 function setMemo(response){
     console.log("Request handler 'setMemo' was called.");
-    fs.readFile('./htmls/setMemo.html', function(err,body){
-       if(!err){
-           response.writeHead(200, {"Content-Type": "text/html"});
-           response.write(body);
-           response.end();
-       }
-    });
+    view.showSetMemo(response);
 }
 
 
@@ -40,8 +36,20 @@ function upload(response, request) {
     console.log("about to parse");
     form.parse(request, function(error, fields, files) {
         console.log("parsing done");
+
+
+        var exito = db.insertMemo(fields.Descripcion, fields.Fecha);
+        if(exito) {
+            view.showSetMemoOk(response);
+        } else{
+            view.showSetMemoNotOk(response);
+        }
+
+
+
         /* Possible error on Windows systems:
          tried to rename to an already existing file */
+        /*
         fs.rename(files.upload.path, "/tmp/test.png", function(error) {
             if (error) {
                 fs.unlink("/tmp/test.png");
@@ -51,7 +59,7 @@ function upload(response, request) {
         response.writeHead(200, {"Content-Type": "text/html"});
         response.write("received image:<br/>");
         response.write("<img src='/show' />");
-        response.end();
+        response.end();*/
     });
 }
 function show(response) {
