@@ -4,7 +4,7 @@
 	</head>
 	<body>
 		<h1 title="Crear tarea">Crear tarea</h1>
-		<form action="/upload" enctype="multipart/form-data" method="post">
+		<form action="/uploadMemo" enctype="multipart/form-data" method="post">
 		<div>
 			<p>Introduzca la descripción de la tarea a realizar:</p>
 			<textarea name="Descripcion" rows="4" cols="50" required></textarea>
@@ -23,6 +23,10 @@
 			<input type="submit" value="Subir"></input>
 		</div>
 		</form>
+		<div>
+		<p><a href="start">Volver al inicio</a></p>
+		<p><a href="showAllMemo">Mostrar listado de tareas</a></p>
+		</div>
 	</body>
 
 </html>
