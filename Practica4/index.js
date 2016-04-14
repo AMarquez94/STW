@@ -18,6 +18,9 @@ handle["/showAllMemo"] = requestHandlers.showAllMemo;
 handle["/showMemo"] = requestHandlers.showMemo;
 handle["/deleteMemo"] = requestHandlers.deleteMemo;
 handle["/downloadFile"] = requestHandlers.downloadFile;
+handle["/login"] = requestHandlers.login;
+handle["/loggedin"] = requestHandlers.loggedin;
+handle["/logout"] = requestHandlers.logout;
 
 /* Se inicia el servidor */
 server.start(router.route, handle);

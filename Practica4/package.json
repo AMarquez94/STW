@@ -3,7 +3,8 @@
 "version": "0.0.1",
 "description": "",
 "dependencies": {
- "mongodb": "^1.4.7"
+ "mongodb": "^1.4.7",
+ "bcrypt": "latest"
 },
 "devDependencies": {}
 } 

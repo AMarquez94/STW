@@ -6,6 +6,7 @@
 'use strict';
 var MongoClient = require('mongodb').MongoClient;
 var ObjectID = require('mongodb').ObjectID;
+var bcrypt = require('bcrypt');
 
 var uri = 'mongodb://127.0.0.1:27017/tareator';
 
@@ -121,8 +122,73 @@ function getBlob(id, callback){
     });
 }
 
+/**
+ * Con los parametros usuario/contraseña, comprueba primero si el usuario existe.
+ * Si no existe, lo inserta en la base de datos. Si existe, comprueba que la
+ * contraseña (encriptada) se corresponde a la almacenada.
+ * Despues, invoca a la funcion callback con los resultados
+ */
+function login(username, password, callback) {
+    if (username != null) {
+        MongoClient.connect(uri, function (err, connection) {
+
+            var collection = connection.collection('users');
+
+            collection.findOne({'username': username}, function (err, row) {
+                if (row == undefined) {
+
+                    /* Nuevo usuario */
+
+                    bcrypt.hash(password, 10, function (err, hash) {
+                        collection.insert({'username': username, 'password': hash}, function (err) {
+                            connection.close();
+                            callback(err, true, hash);
+                        });
+                    });
+                } else {
+
+                    /* Usuario existente */
+                    bcrypt.compare(password, row.password, function (err, res) {
+                        connection.close();
+                        callback(err, res, row.password);
+                    })
+                }
+            });
+        });
+    } else{
+        callback(true,null,null);
+    }
+}
+
+/**
+ * Comprueba si la pareja usuario/contraseña pasada como parametro se corresponde a la
+ * insertada en la base de datos
+ */
+function checkLogged(username,password,callback){
+    if(username != null){
+        MongoClient.connect(uri,function(err,connection){
+
+            var collection = connection.collection('users');
+
+            collection.findOne({'username': username}, function(err,row){
+                if(row == undefined){
+                    connection.close();
+                    callback(false);
+                } else{
+                    connection.close();
+                    callback(row.username == username && row.password == password);
+                }
+            });
+        });
+    } else{
+        callback(false);
+    }
+}
+
 exports.insertMemo = insertMemo;
 exports.getAllMemo = getAllMemo;
 exports.getMemo = getMemo;
 exports.deleteMemo = deleteMemo;
 exports.getBlob = getBlob;
+exports.login = login;
+exports.checkLogged = checkLogged;
